@@ -3,6 +3,14 @@ export type ApiRow = {
   url: string;
 };
 
+export type Species = {
+  genus: string;
+  language: {
+    name: string;
+    url: string;
+  };
+};
+
 export type ApiDetail = {
   abilities: {
     ability: {
@@ -121,10 +129,11 @@ function fetchAllKantoPokemon(): Promise<ApiRow[]> {
     })
     .catch((e) => {
       console.error(e);
+      return [] as ApiRow[];
     });
 }
 
-function fetchPokemonDetail(pkmnNameOrId: string | number) {
+function fetchPokemonDetail(pkmnNameOrId: string): Promise<ApiDetail> {
   return fetch(`https://pokeapi.co/api/v2/pokemon/${pkmnNameOrId}/`)
     .then((response) => response.json())
     .then((pokemonDetail: ApiDetail) => {
@@ -132,7 +141,18 @@ function fetchPokemonDetail(pkmnNameOrId: string | number) {
     })
     .catch((e) => {
       console.error(e);
+      return {} as ApiDetail;
+    });
+}
+function fetchPokemonSpecies(pkmnNameOrId: number) {
+  return fetch(`https://pokeapi.co/api/v2/pokemon-species/${pkmnNameOrId}/`)
+    .then((response) => response.json())
+    .then((pokemonSpecies) => {
+      return pokemonSpecies;
+    })
+    .catch((e) => {
+      console.error(e);
     });
 }
 
-export { fetchAllKantoPokemon, fetchPokemonDetail };
+export { fetchAllKantoPokemon, fetchPokemonDetail, fetchPokemonSpecies };

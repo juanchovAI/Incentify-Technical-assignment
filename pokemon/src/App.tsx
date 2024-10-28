@@ -1,104 +1,70 @@
 import { useEffect, useState } from "react";
 
-import "./App.css";
-import mockAllPokemon from "./assets/mockAllPokemon";
-import mockDetailPidgeotto from "./assets/mockDetailPidgeotto";
-import {
-  ApiRow,
-  fetchAllKantoPokemon,
-  fetchPokemonDetail,
-} from "./fetchers/getPokemon";
-import {
-  AppPkmnDetail,
-  getAppPkmnDetailFromApi,
-  getImageConfigFromType,
-} from "./helpers";
+import { Routes, Route, Navigate } from "react-router-dom";
+
+import { ApiRow, fetchAllKantoPokemon } from "../fetchers/getPokemon";
+
+import ListContainer from "./components/layout/ListContainer";
+import PokemonInformationSection from "./components/layout/PokemonInformationSection";
+import ErrorPage from "./components/layout/ErrorPage";
 
 function App() {
   const [pokemonCollection, setPokemonCollection] = useState<ApiRow[]>([]);
-  const [selectedPkmn, setSelectedPkmn] = useState<AppPkmnDetail | undefined>(
-    undefined
+  const [loading, setLoading] = useState<boolean>(true);
+  const [customHeigthList, setCustomHeigthList] = useState<string>(
+    " max-sm:h-0 max-sm:py-0 max-sm:border-0"
   );
-
   useEffect(() => {
     if (pokemonCollection.length > 0) {
       return;
     }
-    // TODO: fetch pokemon
-    console.error("TODO", fetchAllKantoPokemon);
-    setPokemonCollection(mockAllPokemon);
+    try {
+      fetchAllKantoPokemon()
+        .then((data) => {
+          setPokemonCollection(data);
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    } catch (error) {
+      console.error(error);
+    }
   }, []);
-
-  async function handlePokemonSelect() {
-    // TODO: fetch pokemon
-    console.error("TODO", fetchPokemonDetail);
-    const apiDetail = mockDetailPidgeotto;
-    const appDetail = getAppPkmnDetailFromApi(apiDetail);
-    setSelectedPkmn(appDetail);
-  }
-
-  const pkmnFirstType =
-    !!selectedPkmn && (selectedPkmn.types.length ?? 0) > 0
-      ? selectedPkmn.types[0]
-      : "normal";
-
-  const firstTypeImageConfig = getImageConfigFromType(pkmnFirstType);
 
   return (
     <>
-      <div>Pokemon App</div>
-      <div style={{ width: "100%", height: "100%", display: "flex" }}>
-        <div style={{ width: "30%" }}>
-          {pokemonCollection?.map((pokemonRow) => {
-            return (
-              <div key={pokemonRow.url}>
-                <div onClick={() => handlePokemonSelect()}>
-                  {pokemonRow.name}
-                </div>
-              </div>
-            );
-          })}
+      <div className="bg-Red w-100 px-40 py-50 flex gap-x-25 font-main max-sm:flex-col max-sm:p-20 max-sm:h-full">
+        <ListContainer
+          pokemons={pokemonCollection}
+          loading={loading}
+          heigth={customHeigthList}
+        />
+        <div
+          onClick={() => {
+            customHeigthList === ""
+              ? setCustomHeigthList(" max-sm:h-0 max-sm:py-0 max-sm:border-0")
+              : setCustomHeigthList("");
+          }}
+          className="w-100 font-semibold bg-Detective p-8 border-4 border-TyElectric text-center cursor-pointer my-2 shadow-md z-10 sm:hidden"
+        >
+          {customHeigthList === ""
+            ? "🔼 Hide Pokemon list 🔼"
+            : "🔽 Show Pokemon list 🔽"}
         </div>
-        <div style={{ width: "70%" }}>
-          {selectedPkmn ? (
-            <div>
-              <div>
-                <div
-                  style={{ backgroundColor: firstTypeImageConfig.color }}
-                ></div>
-                <img src={firstTypeImageConfig.vectorSrc} />
-                <div className="w-[150px] h-[150px]">{selectedPkmn?.name}</div>
-              </div>
-              <div>
-                {selectedPkmn?.types.map((type) => {
-                  const typeImageConfig = getImageConfigFromType(type);
-
-                  return (
-                    <div key={type}>
-                      <img src={typeImageConfig.pngSrc} />
-                    </div>
-                  );
-                })}
-              </div>
-              <div>
-                <div>Weight</div>
-                <div>{selectedPkmn.weight} kg</div>
-              </div>
-              <div>
-                <div>Height</div>
-                <div>{selectedPkmn.height} m</div>
-              </div>
-              <div>
-                <div>Species</div>
-                <div>{selectedPkmn.species}</div>
-              </div>
-              <div>
-                <div>Ability</div>
-                <div>{selectedPkmn.ability}</div>
-              </div>
-            </div>
-          ) : null}
-        </div>
+        <Routes>
+          <Route
+            path="/pokemon/:pokemonName"
+            element={
+              <PokemonInformationSection
+                setCustomHeigthList={setCustomHeigthList}
+              />
+            }
+          />
+          <Route path="/error" element={<ErrorPage />} />
+          <Route path="/" element={<Navigate to="/pokemon/bulbasaur" />} />
+          <Route path="*" element={<ErrorPage />} />
+        </Routes>
       </div>
     </>
   );

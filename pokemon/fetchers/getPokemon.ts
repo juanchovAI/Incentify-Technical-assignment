@@ -3,6 +3,14 @@ export type ApiRow = {
   url: string;
 };
 
+export type Species = {
+  genus: string;
+  language: {
+    name: string;
+    url: string;
+  };
+};
+
 export type ApiDetail = {
   abilities: {
     ability: {
@@ -135,4 +143,15 @@ function fetchPokemonDetail(pkmnNameOrId: string | number) {
     });
 }
 
-export { fetchAllKantoPokemon, fetchPokemonDetail };
+function fetchPokemonSpecies(pkmnNameOrId: number) {
+  return fetch(`https://pokeapi.co/api/v2/pokemon-species/${pkmnNameOrId}/`)
+    .then((response) => response.json())
+    .then((pokemonSpecies) => {
+      return pokemonSpecies;
+    })
+    .catch((e) => {
+      console.error(e);
+    });
+}
+
+export { fetchAllKantoPokemon, fetchPokemonDetail, fetchPokemonSpecies };
